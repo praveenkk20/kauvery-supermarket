@@ -82,9 +82,10 @@ export default {
 
       try {
         const { data } = await api.post(url, payload);
-        store.dispatch(setAuth({ token: data.token, user: { id: data.userId, email: this.email } }));
+        const user = data.user || { id: data.userId, email: this.email, isAdmin: false };
+        store.dispatch(setAuth({ token: data.token, user }));
         this.success = this.isSignup ? 'Account created successfully. Redirecting...' : null;
-        this.$router.push('/');
+        this.$router.push(user.isAdmin ? '/admin' : '/');
       } catch (err) {
         this.error = err.response?.data?.error || 'Unable to sign in. Check your credentials.';
       }

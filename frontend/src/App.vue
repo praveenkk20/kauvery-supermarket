@@ -3,8 +3,9 @@
     <header class="app-header">
       <div class="brand">Kauvery Supermarket</div>
       <nav class="nav-links">
-        <router-link to="/" class="nav-link">Shop</router-link>
-        <router-link to="/cart" class="nav-link">Cart</router-link>
+        <router-link v-if="!auth.user?.isAdmin" to="/" class="nav-link">Shop</router-link>
+        <router-link v-if="auth.token && !auth.user?.isAdmin" to="/cart" class="nav-link">Cart</router-link>
+        <router-link v-if="auth.user?.isAdmin" to="/admin" class="nav-link">Admin</router-link>
         <router-link v-if="!auth.token" to="/login" class="nav-link action">Login</router-link>
         <button v-else type="button" class="nav-link action" @click="logout">Logout</button>
       </nav>

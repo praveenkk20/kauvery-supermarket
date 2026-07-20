@@ -5,10 +5,7 @@ const envBase = (import.meta.env.VITE_API_BASE || 'http://localhost:4000').repla
 const apiBase = import.meta.env.DEV ? '/api' : envBase;
 
 const api = axios.create({
-  baseURL: apiBase,
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  baseURL: apiBase
 });
 
 api.interceptors.request.use((config) => {

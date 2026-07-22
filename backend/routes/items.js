@@ -13,8 +13,9 @@ router.get('/', async (req, res) => {
 
 // Admin: add item
 router.post('/', adminRequired, async (req, res) => {
-  const { name, description, category, price, discountPrice, stock } = req.body;
+  const { name, description, category, price, discountPrice, stock, isActive, sku, weight, brand, tags } = req.body;
   let imageUrl = req.body.imageUrl;
+  const parsedTags = Array.isArray(tags) ? tags : (typeof tags === 'string' ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : []);
 
   if (req.files?.image) {
     const uploadDir = path.join(__dirname, '..', 'uploads');
@@ -26,7 +27,20 @@ router.post('/', adminRequired, async (req, res) => {
     imageUrl = `/uploads/${fileName}`;
   }
 
-  const item = await Item.create({ name, description, category, price, discountPrice, imageUrl, stock });
+  const item = await Item.create({
+    name,
+    description,
+    category,
+    price,
+    discountPrice,
+    imageUrl,
+    stock: stock != null ? Number(stock) : 0,
+    isActive: isActive == null ? true : (isActive === 'false' ? false : Boolean(isActive)),
+    sku,
+    weight,
+    brand,
+    tags: parsedTags
+  });
   res.json(item);
 });
 
@@ -34,8 +48,9 @@ router.post('/', adminRequired, async (req, res) => {
 router.put('/:id', adminRequired, async (req, res) => {
   const item = await Item.findByPk(req.params.id);
   if (!item) return res.status(404).json({ error: 'Not found' });
-  const { name, description, category, price, discountPrice, stock } = req.body;
+  const { name, description, category, price, discountPrice, stock, isActive, sku, weight, brand, tags } = req.body;
   let imageUrl = req.body.imageUrl || item.imageUrl;
+  const parsedTags = Array.isArray(tags) ? tags : (typeof tags === 'string' ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : item.tags || []);
 
   if (req.files?.image) {
     const uploadDir = path.join(__dirname, '..', 'uploads');
@@ -47,7 +62,20 @@ router.put('/:id', adminRequired, async (req, res) => {
     imageUrl = `/uploads/${fileName}`;
   }
 
-  await item.update({ name, description, category, price, discountPrice, imageUrl, stock });
+  await item.update({
+    name,
+    description,
+    category,
+    price,
+    discountPrice,
+    imageUrl,
+    stock: stock != null ? Number(stock) : item.stock,
+    isActive: isActive == null ? item.isActive : (isActive === 'false' ? false : Boolean(isActive)),
+    sku,
+    weight,
+    brand,
+    tags: parsedTags
+  });
   res.json(item);
 });
 

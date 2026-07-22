@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const fs = require('fs');
 const path = require('path');
 const sequelize = require('./db');
 
@@ -29,6 +30,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/auth', require('./routes/auth'));
 app.use('/items', require('./routes/items'));
 app.use('/cart', require('./routes/cart'));
+app.use('/orders', require('./routes/orders'));
+app.use('/users', require('./routes/users'));
+app.use('/categories', require('./routes/categories'));
+app.use('/reviews', require('./routes/reviews'));
 
 app.get('/', (req, res) => res.json({ ok: true, message: 'Kauvery Supermarket API' }));
 
@@ -36,7 +41,23 @@ const PORT = process.env.PORT || 4000;
 
 (async () => {
   try {
-    await sequelize.sync({ alter: true });
+    const dbPath = path.join(__dirname, 'database.sqlite');
+    if (fs.existsSync(dbPath)) {
+      try {
+        await sequelize.sync({ alter: true });
+      } catch (err) {
+        if (err.name === 'SequelizeUniqueConstraintError' || err.message?.includes('UNIQUE constraint failed')) {
+          console.warn('SQLite schema alter failed; recreating local database file to recover.');
+          fs.renameSync(dbPath, `${dbPath}.bak`);
+          await sequelize.sync({ force: true });
+        } else {
+          throw err;
+        }
+      }
+    } else {
+      await sequelize.sync({ force: true });
+    }
+
     const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
     server.on('error', (err) => {
       if (err.code === 'EADDRINUSE') {

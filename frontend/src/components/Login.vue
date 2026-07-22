@@ -82,7 +82,18 @@ export default {
 
       try {
         const { data } = await api.post(url, payload);
-        const user = data.user || { id: data.userId, email: this.email, isAdmin: false };
+        const profile = JSON.parse(localStorage.getItem('kauvery-profile') || '{}');
+        const user = {
+          ...(data.user || {}),
+          ...profile,
+          id: data.userId || profile.id,
+          email: this.email,
+          name: this.isSignup ? this.name || profile.name : profile.name || this.name,
+          phone: this.phone || profile.phone || '',
+          isAdmin: Boolean(data.user?.isAdmin)
+        };
+
+        localStorage.setItem('kauvery-profile', JSON.stringify(user));
         store.dispatch(setAuth({ token: data.token, user }));
         this.success = this.isSignup ? 'Account created successfully. Redirecting...' : null;
         this.$router.push(user.isAdmin ? '/admin' : '/');
